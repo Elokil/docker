@@ -1,5 +1,5 @@
 #image de node et sa version
-FROM node:24
+FROM node:24-alpine
 
 #Dossier de travail interne au container
 WORKDIR /usr/src/app
