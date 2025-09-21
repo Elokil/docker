@@ -5,10 +5,10 @@ FROM node:24-alpine
 WORKDIR /usr/src/app
 
 #Installation du angular CLI 
-RUN npm install -g @angular/CLI
+RUN npm install -g @angular/cli
 
 #Dossier de sortie pour le build
 VOLUME [ "/dist" ]
 
 #Commande par default: build Angular en production
-CMD [ "ng", "build", "--prod", "--output-path=/dist" ]
+CMD ["ng", "build", "--configuration", "production", "--output-path=/dist"]

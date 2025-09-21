@@ -1,0 +1,106 @@
+services:
+  backend:
+    build: ./node-server
+    container_name: backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/express:/usr/src/app
+    restart: unless-stopped
+  angular-builder:
+    build: ./angular-builder
+    container_name: angular-builder
+    volumes:
+      - /app/angular/dockerTest:/usr/src/app
+      - /app/angular/dist:/dist
+    depends_on:
+      - backend
+    command: ["ng", "build", "--configuration", "production", "--output-path=/dist"]
+  
+  frontend:
+    build: ./nginx
+    container_name: frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - /app/angular/dist/browser:/usr/share/nginx/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - angular-builder
+      - backend
+    restart: unless-stopped
+  postgres:
+    image: postgres:17.6
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: projectdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  
+  redis:
+    image: redis:8.2.1
+    container_name: redis
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:latest
+    env_file: ./docker.env
+    container_name: outline
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - outline-data:/var/lib/outline/uploads
+    ports:
+      - "3333:3333"
+    restart: unless-stopped
+  
+  postgres-gitea:
+    image: postgres:17.6
+    container_name: postgres-gitea
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: gitea123
+      POSTGRES_DB: gitea_db
+    volumes:
+      - postgres-gitea-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    depends_on:
+      - postgres-gitea
+    environment:
+      USER_UID: 1000
+      USER_GID: 1000
+      DB_TYPE: postgres
+      DB_HOST: postgres-gitea:5432
+      DB_NAME: gitea_db
+      DB_USER: gitea
+      DB_PASSWD: gitea123
+      APP_NAME: "Gitea"
+      ROOT_URL: "http://localhost:3004/"
+    volumes:
+      - gitea-data:/data
+    ports:
+      - "3004:3000"
+    restart: unless-stopped
+    
+volumes:
+  postgres-data:
+  outline-data:
+  redis-data:
+  postgres-gitea-data:
+  gitea-data:

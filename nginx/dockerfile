@@ -1,0 +1,9 @@
+#version de l'image nginx
+FROM nginx:1.29.1-alpine
+
+COPY conf.d /etc/nginx/conf.d
+
+
+#Exposer le port web
+EXPOSE 80
+

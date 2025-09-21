@@ -7,7 +7,6 @@ WORKDIR /usr/src/app
 
 #on install les dépendance necessaire 
 COPY package*.json ./
-RUN npm install
 
 #on expose le port 
 EXPOSE 3000
