@@ -1,13 +1,18 @@
-From node:24
+#image de node et sa version
+FROM node:24
 
+#Dossier de travail interne au container
 WORKDIR /usr/src/app
 
+
+#on install les dépendance necessaire 
 COPY package*.json ./
 RUN npm install
 
-COPY . .
-
+#on expose le port 
 EXPOSE 3000
+
+#On lance le server node
 CMD [ "node", "server.js" ]
 
 
