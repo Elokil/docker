@@ -1,0 +1,14 @@
+#image de node et sa version
+FROM node:24
+
+#Dossier de travail interne au container
+WORKDIR /usr/src/app
+
+#Installation du angular CLI 
+RUN npm install -g @angular/CLI
+
+#Dossier de sortie pour le build
+VOLUME [ "/dist" ]
+
+#Commande par default: build Angular en production
+CMD [ "ng", "build", "--prod", "--output-path=/dist" ]
