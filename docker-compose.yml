@@ -1,25 +1,9 @@
 services:
-  backend:
-    build: ./node-server
-    container_name: backend
-    ports:
-      - "3000:3000"
-    volumes:
-      - /app/express:/usr/src/app
-    restart: unless-stopped
-  angular-builder:
-    build: ./angular-builder
-    container_name: angular-builder
-    volumes:
-      - /app/angular/dockerTest:/usr/src/app
-      - /app/angular/dist:/dist
-    depends_on:
-      - backend
-    command: ["ng", "build", "--configuration", "production", "--output-path=/dist"]
-  
+
   frontend:
-    build: ./nginx
+    build: images/nginx
     container_name: frontend
+    hostname: frontend
     ports:
       - "80:80"
       - "443:443"
@@ -31,9 +15,65 @@ services:
       - angular-builder
       - backend
     restart: unless-stopped
+
+  backend:
+    build: images/node-server
+    container_name: backend
+    hostname: backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/express:/usr/src/app
+    restart: unless-stopped
+
+  angular-builder:
+    build: images/angular-builder
+    container_name: angular-builder
+    hostname: angular-builder
+    volumes:
+      - /app/angular/dockerTest:/usr/src/app
+      - /app/angular/dist:/dist
+    depends_on:
+      - backend
+    command: ["ng", "build", "--configuration", "production", "--output-path=/dist"]
+
+
+################################################################################
+## Plugins
+################################################################################
+  redis:
+    image: redis:8.2.1
+    container_name: redis
+    hostname: redis
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+
+################################################################################
+## Outils interne
+################################################################################
+
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:latest
+    env_file: images/outline/docker.env
+    container_name: outline
+    hostname: outline
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - outline-data:/var/lib/outline/uploads
+    ports:
+      - "3333:3333"
+    restart: unless-stopped
+
   postgres:
     image: postgres:17.6
     container_name: postgres
+    hostname: postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -43,45 +83,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-  
-  redis:
-    image: redis:8.2.1
-    container_name: redis
-    volumes:
-      - redis-data:/data
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-
-  outline:
-    image: docker.getoutline.com/outlinewiki/outline:latest
-    env_file: ./docker.env
-    container_name: outline
-    depends_on:
-      - postgres
-      - redis
-    volumes:
-      - outline-data:/var/lib/outline/uploads
-    ports:
-      - "3333:3333"
-    restart: unless-stopped
-  
-  postgres-gitea:
-    image: postgres:17.6
-    container_name: postgres-gitea
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: gitea
-      POSTGRES_PASSWORD: gitea123
-      POSTGRES_DB: gitea_db
-    volumes:
-      - postgres-gitea-data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
 
   gitea:
     image: gitea/gitea:latest
     container_name: gitea
+    hostname: gitea
     depends_on:
       - postgres-gitea
     environment:
@@ -100,10 +106,33 @@ services:
       - "3004:3000"
       - "2222:22"    # SSH pour Git
     restart: unless-stopped
-    
+
+  postgres-gitea:
+    image: postgres:17.6
+    container_name: postgres-gitea
+    hostname: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: gitea123
+      POSTGRES_DB: gitea_db
+    volumes:
+      - postgres-gitea-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+
+################################################################################
+## Volumes
+################################################################################
 volumes:
   postgres-data:
+    name: postgres-data
   outline-data:
+    name: outline-data
   redis-data:
+    name: redis-data
   postgres-gitea-data:
+    name: postgres-gitea-data
   gitea-data:
+    name: gitea-data
