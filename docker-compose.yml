@@ -21,10 +21,12 @@ services:
     build: ./nginx
     container_name: frontend
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - /app/angular/dist/browser:/usr/share/nginx/html
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/conf.d/projetM.conf:/etc/nginx/conf.d/projetM.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - angular-builder
       - backend
@@ -91,11 +93,12 @@ services:
       DB_USER: gitea
       DB_PASSWD: gitea123
       APP_NAME: "Gitea"
-      ROOT_URL: "http://localhost:3004/"
+      ROOT_URL: "http://git.projetaethari.com"
     volumes:
       - gitea-data:/data
     ports:
       - "3004:3000"
+      - "2222:22"    # SSH pour Git
     restart: unless-stopped
     
 volumes:
