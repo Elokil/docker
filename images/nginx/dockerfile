@@ -1,9 +1,16 @@
-#version de l'image nginx
-FROM nginx:1.29.1-alpine
+FROM debian:12
 
-COPY conf.d /etc/nginx/conf.d
+RUN apt-get update && apt-get install -y nginx-full wget
 
+WORKDIR /home
+RUN wget https://github.com/nginx/nginx/raw/master/conf/mime.types
+RUN cp mime.types /etc/nginx/
 
-#Exposer le port web
-EXPOSE 80
+RUN rm /etc/nginx/sites-enabled/*
 
+RUN ln -sf /dev/stdout /var/log/nginx/access.log
+RUN ln -sf /dev/stderr /var/log/nginx/error.log
+
+EXPOSE 80 88 443
+
+CMD ["nginx", "-g", "daemon off;"]

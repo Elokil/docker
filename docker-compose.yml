@@ -22,10 +22,10 @@ services:
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.http.routers.traefik.service=api@internal"
 
-  frontend:
+  nginx:
     build: images/nginx
-    container_name: frontend
-    hostname: frontend
+    container_name: nginx
+    hostname: nginx
     volumes:
       - /app/angular/dist/browser:/usr/share/nginx/html
       - ./nginx/conf.d/projetM.conf:/etc/nginx/conf.d/projetM.conf:ro
