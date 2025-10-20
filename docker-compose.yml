@@ -108,58 +108,37 @@ services:
     container_name: gitea
     hostname: gitea
     depends_on:
-      - postgres-gitea
+      - postgres
     environment:
       USER_UID: 1000
       USER_GID: 1000
       DB_TYPE: postgres
-      DB_HOST: postgres-gitea:5432
+      DB_HOST: postgres:5432
       DB_NAME: gitea_db
-      DB_USER: gitea
-      DB_PASSWD: gitea123
+      DB_USER: admin
+      DB_PASSWD: admin
       APP_NAME: "Gitea"
       ROOT_URL: "http://git.projetaethari.com"
     volumes:
-      - gitea-data:/data
+      - gitea-data2:/data
     ports:
       - "3004:3000"
       - "2222:22"    # SSH pour Git
     restart: unless-stopped
 
-  postgres-gitea:
-    image: postgres:17.6
-    container_name: postgres-gitea
-    hostname: postgres
+  portainer:
+    image: portainer/portainer-ce:2.11.0
+    container_name: portainer
+    hostname: portainer
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: gitea
-      POSTGRES_PASSWORD: gitea123
-      POSTGRES_DB: gitea_db
-    volumes:
-      - postgres-gitea-data:/var/lib/postgresql/data
+    command: -H unix:///var/run/docker.sock --admin-password $$2y$$05$$b0DgtG94LtpeuqEKHRYYreEf2rqBI5.4Rin.38.ENaAlL/7TeKX2q
+    #mot de passe : password (par default)
     ports:
-      - "5433:5432"
-
-  adminer:
-    image: adminer
-    container_name: adminer
-    hostname: adminer
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    environment:
-      ADMINER_DEFAULT_SERVER: postgres
-      ADMINER_DESIGN: haeckel
+      - "8003:9000"
     volumes:
-      - ./images/adminer/php.ini:/usr/local/etc/php/conf.d/upload_large_dumps.ini
-    ports:
-      - "8002:8080"
-    networks:
-      - network_local
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
 
-################################################################################
-## Volumes
-################################################################################
 volumes:
   postgres-data:
     name: postgres-data
@@ -171,3 +150,8 @@ volumes:
     name: postgres-gitea-data
   gitea-data:
     name: gitea-data
+  gitea-data2:
+    name: gitea-data2
+  portainer-data:
+    name: portainer-data
+
