@@ -1,12 +1,31 @@
 services:
 
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - "--api.insecure=true"                       # UI de Traefik (http://localhost:8080)
+      - "--api.dashboard=true"
+      - "--providers.docker=true"                   # Découverte auto des containers Docker
+      - "--providers.docker.exposedbydefault=false" # Par défaut, ne pas exposer les containers
+      - "--entrypoints.web.address=:80"             # Entrypoint HTTP
+      - "--entrypoints.websecure.address=:443"      # Entrypoint HTTPS
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"                                 # Tableau de bord Traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.projetaethari.com`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+
   frontend:
     build: images/nginx
     container_name: frontend
     hostname: frontend
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - /app/angular/dist/browser:/usr/share/nginx/html
       - ./nginx/conf.d/projetM.conf:/etc/nginx/conf.d/projetM.conf:ro
@@ -121,6 +140,22 @@ services:
     ports:
       - "5433:5432"
 
+  adminer:
+    image: adminer
+    container_name: adminer
+    hostname: adminer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: haeckel
+    volumes:
+      - ./images/adminer/php.ini:/usr/local/etc/php/conf.d/upload_large_dumps.ini
+    ports:
+      - "8002:8080"
+    networks:
+      - network_local
 
 ################################################################################
 ## Volumes
