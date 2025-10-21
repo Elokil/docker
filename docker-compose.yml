@@ -1,15 +1,19 @@
 services:
+
   backend:
     build: ./node-server
     container_name: backend
+    backend:
     ports:
       - "3000:3000"
     volumes:
       - /app/express:/usr/src/app
     restart: unless-stopped
+
   angular-builder:
     build: ./angular-builder
     container_name: angular-builder
+    hostname: angular-builder
     volumes:
       - /app/angular/dockerTest:/usr/src/app
       - /app/angular/dist:/dist
@@ -20,6 +24,7 @@ services:
   frontend:
     build: ./nginx
     container_name: frontend
+    hostname: frontend
     ports:
       - "80:80"
       - "443:443"
@@ -31,9 +36,11 @@ services:
       - angular-builder
       - backend
     restart: unless-stopped
+
   postgres:
     image: postgres:17.6
     container_name: postgres
+    hostname: postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -47,6 +54,7 @@ services:
   redis:
     image: redis:8.2.1
     container_name: redis
+    hostname: redis
     volumes:
       - redis-data:/data
     ports:
@@ -55,8 +63,9 @@ services:
 
   outline:
     image: docker.getoutline.com/outlinewiki/outline:latest
-    env_file: ./docker.env
     container_name: outline
+    hostname: outline
+    env_file: ./docker.env
     depends_on:
       - postgres
       - redis
@@ -65,33 +74,21 @@ services:
     ports:
       - "3333:3333"
     restart: unless-stopped
-  
-  postgres-gitea:
-    image: postgres:17.6
-    container_name: postgres-gitea
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: gitea
-      POSTGRES_PASSWORD: gitea123
-      POSTGRES_DB: gitea_db
-    volumes:
-      - postgres-gitea-data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
 
   gitea:
     image: gitea/gitea:latest
     container_name: gitea
+    hostname: gitea
     depends_on:
-      - postgres-gitea
+      - postgres
     environment:
       USER_UID: 1000
       USER_GID: 1000
       DB_TYPE: postgres
-      DB_HOST: postgres-gitea:5432
+      DB_HOST: postgres:5432
       DB_NAME: gitea_db
-      DB_USER: gitea
-      DB_PASSWD: gitea123
+      DB_USER: admin
+      DB_PASSWD: admin
       APP_NAME: "Gitea"
       ROOT_URL: "http://git.projetaethari.com"
     volumes:
@@ -100,10 +97,26 @@ services:
       - "3004:3000"
       - "2222:22"    # SSH pour Git
     restart: unless-stopped
-    
+
+  portainer:
+     image: portainer/portainer-ce:2.11.0
+     container_name: portainer
+     hostname: portainer
+     restart: unless-stopped
+     command: -H unix:///var/run/docker.sock --admin-password $$2y$$05$$b0DgtG94LtpeuqEKHRYYreEf2rqBI5.4Rin.38.ENaAlL/7TeKX2q
+     #mot de passe : password (par default)
+     ports:
+       - "8003:9000"
+     volumes:
+       - /var/run/docker.sock:/var/run/docker.sock
+       - portainer-data:/data
+
 volumes:
   postgres-data:
+    name: postgres-data
   outline-data:
+    name: outline-data
   redis-data:
-  postgres-gitea-data:
+    name: redis-data
   gitea-data:
+    name: gitea-data
