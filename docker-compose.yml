@@ -56,6 +56,37 @@ services:
     depends_on:
       - backend
     command: ["ng", "build", "--configuration", "production", "--output-path=/dist"]
+  
+  frontend:
+    build: ./nginx
+    container_name: frontend
+    hostname: frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /app/angular/dist/browser:/usr/share/nginx/html
+      - ./nginx/conf.d/projetM.conf:/etc/nginx/conf.d/projetM.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - angular-builder
+      - backend
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17.6
+    container_name: postgres
+    hostname: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: projectdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  
 
 
 ################################################################################
@@ -78,31 +109,18 @@ services:
 
   outline:
     image: docker.getoutline.com/outlinewiki/outline:latest
-    env_file: images/outline/docker.env
     container_name: outline
     hostname: outline
+    env_file: images/outline/docker.env
     depends_on:
       - postgres
       - redis
     volumes:
       - outline-data:/var/lib/outline/uploads
+      - outline-data-data:/var/lib/outline/data
     ports:
       - "3333:3333"
     restart: unless-stopped
-
-  postgres:
-    image: postgres:17.6
-    container_name: postgres
-    hostname: postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: projectdb
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   gitea:
     image: gitea/gitea:latest
@@ -121,38 +139,35 @@ services:
       APP_NAME: "Gitea"
       ROOT_URL: "http://git.projetaethari.com"
     volumes:
-      - gitea-data2:/data
+      - gitea-data:/data
     ports:
       - "3004:3000"
       - "2222:22"    # SSH pour Git
     restart: unless-stopped
 
   portainer:
-    image: portainer/portainer-ce:2.11.0
-    container_name: portainer
-    hostname: portainer
-    restart: unless-stopped
-    command: -H unix:///var/run/docker.sock --admin-password $$2y$$05$$b0DgtG94LtpeuqEKHRYYreEf2rqBI5.4Rin.38.ENaAlL/7TeKX2q
-    #mot de passe : password (par default)
-    ports:
-      - "8003:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer-data:/data
+     image: portainer/portainer-ce:2.11.0
+     container_name: portainer
+     hostname: portainer
+     restart: unless-stopped
+     command: -H unix:///var/run/docker.sock --admin-password $$2y$$05$$b0DgtG94LtpeuqEKHRYYreEf2rqBI5.4Rin.38.ENaAlL/7TeKX2q
+     #mot de passe : password (par default)
+     ports:
+       - "8003:9000"
+     volumes:
+       - /var/run/docker.sock:/var/run/docker.sock
+       - portainer-data:/data
 
 volumes:
   postgres-data:
-    name: postgres-data
+    name: docker_postgres-data
   outline-data:
-    name: outline-data
+    name: docker_outline-data
+  outline-data-data:
+    name: docker_outline-data-data
   redis-data:
-    name: redis-data
-  postgres-gitea-data:
-    name: postgres-gitea-data
+    name: docker_redis-data
   gitea-data:
-    name: gitea-data
-  gitea-data2:
-    name: gitea-data2
+    name: docker_gitea-data
   portainer-data:
-    name: portainer-data
-
+    name: docker_portainer-data
