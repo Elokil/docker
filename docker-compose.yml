@@ -120,3 +120,5 @@ volumes:
     name: redis-data
   gitea-data:
     name: gitea-data
+  portainer-data:
+    name: portainer-data
