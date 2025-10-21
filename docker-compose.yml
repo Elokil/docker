@@ -3,7 +3,7 @@ services:
   backend:
     build: ./node-server
     container_name: backend
-    backend:
+    hostname: backend
     ports:
       - "3000:3000"
     volumes:
