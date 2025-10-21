@@ -113,12 +113,12 @@ services:
 
 volumes:
   postgres-data:
-    name: postgres-data
+    name: docker_postgres-data
   outline-data:
-    name: outline-data
+    name: docker_outline-data
   redis-data:
-    name: redis-data
+    name: docker_redis-data
   gitea-data:
-    name: gitea-data
+    name: docker_gitea-data
   portainer-data:
-    name: portainer-data
+    name: docker_portainer-data
