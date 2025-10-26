@@ -1,34 +1,15 @@
 services:
 
-  traefik:
-    image: traefik:v3.0
-    container_name: traefik
-    command:
-      - "--api.insecure=true"                       # UI de Traefik (http://localhost:8080)
-      - "--api.dashboard=true"
-      - "--providers.docker=true"                   # Découverte auto des containers Docker
-      - "--providers.docker.exposedbydefault=false" # Par défaut, ne pas exposer les containers
-      - "--entrypoints.web.address=:80"             # Entrypoint HTTP
-      - "--entrypoints.websecure.address=:443"      # Entrypoint HTTPS
+  frontend:
+    build: images/nginx
+    container_name: frontend
+    hostname: frontend
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"                                 # Tableau de bord Traefik
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.projetaethari.com`)"
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.http.routers.traefik.service=api@internal"
-
-  nginx:
-    build: images/nginx
-    container_name: nginx
-    hostname: nginx
     volumes:
       - /app/angular/dist/browser:/usr/share/nginx/html
-      - ./nginx/conf.d/projetM.conf:/etc/nginx/conf.d/projetM.conf:ro
+      - ./nginx/sites-enabled/projetM.conf:/etc/nginx/sites-enabled/projetM.conf:ro
       - ./images/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
@@ -56,22 +37,6 @@ services:
     depends_on:
       - backend
     command: ["ng", "build", "--configuration", "production", "--output-path=/dist"]
-  
-  frontend:
-    build: ./nginx
-    container_name: frontend
-    hostname: frontend
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /app/angular/dist/browser:/usr/share/nginx/html
-      - ./nginx/conf.d/projetM.conf:/etc/nginx/conf.d/projetM.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    depends_on:
-      - angular-builder
-      - backend
-    restart: unless-stopped
 
   postgres:
     image: postgres:17.6
