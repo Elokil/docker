@@ -94,6 +94,7 @@ services:
       ROOT_URL: "http://git.projetaethari.com"
     volumes:
       - gitea-data:/data
+      - ./custom-conf/app.ini:/data/gitea/conf/app.ini:ro
     ports:
       - "3004:3000"
       - "2222:22"    # SSH pour Git
