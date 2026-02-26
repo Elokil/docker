@@ -84,7 +84,7 @@ services:
       AWS_S3_BUCKET_NAME: outline
       AWS_S3_UPLOAD_BUCKET_NAME: outline
       AWS_S3_FORCE_PATH_STYLE: "true"
-      AWS_S3_UPLOAD_BUCKET_URL: https://minio.projetaethari.com
+      AWS_S3_UPLOAD_BUCKET_URL: https://s3.projetaethari.com
   gitea:
     image: gitea/gitea:latest
     container_name: gitea
